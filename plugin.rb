@@ -103,7 +103,7 @@ class OAuth2BasicAuthenticator < ::Auth::OAuth2Authenticator
       json_walk(result, user_json, :user_id)
       json_walk(result, user_json, :username)
       json_walk(result, user_json, :name)
-      #json_walk(result, user_json, :email)
+      json_walk(result, user_json, :email)
       json_walk(result, user_json, :avatar)
     end
 
@@ -119,15 +119,14 @@ class OAuth2BasicAuthenticator < ::Auth::OAuth2Authenticator
 
     result.name = user_details[:name]
     result.username = user_details[:username]
-    #result.email = user_details[:email]
-    #result.email_valid = result.email.present? && SiteSetting.oauth2_email_verified?
+    result.email = user_details[:email]
+    result.email_valid = result.email.present? && SiteSetting.oauth2_email_verified?
     avatar_url = user_details[:avatar]
 
     current_info = ::PluginStore.get("oauth2_basic", "oauth2_basic_user_#{user_details[:user_id]}")
     if current_info
       result.user = User.where(id: current_info[:user_id]).first
       result.user&.update!(email: result.email) if SiteSetting.oauth2_overrides_email && result.email
-    =begin
     elsif SiteSetting.oauth2_email_verified?
       result.user = User.find_by_email(result.email)
       if !result.user && SiteSetting.oauth2_overrides_all
@@ -142,7 +141,6 @@ class OAuth2BasicAuthenticator < ::Auth::OAuth2Authenticator
       if result.user && user_details[:user_id]
         ::PluginStore.set("oauth2_basic", "oauth2_basic_user_#{user_details[:user_id]}", user_id: result.user.id)
       end
-    =end
     end
 
     download_avatar(result.user, avatar_url)
